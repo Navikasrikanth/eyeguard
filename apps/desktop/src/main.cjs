@@ -1,0 +1,252 @@
+const path = require("node:path");
+const fs = require("node:fs");
+const { spawn } = require("node:child_process");
+const { app, BrowserWindow, ipcMain } = require("electron");
+
+const isDev = Boolean(process.env.EYEGUARD_FRONTEND_URL);
+const visionPort = process.env.EYEGUARD_VISION_PORT || "8765";
+let visionProcess = null;
+
+function parseUrl(value) {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
+function isTrustedRendererOrigin(value) {
+  if (!value) {
+    return false;
+  }
+  if (String(value).startsWith("file:")) {
+    return true;
+  }
+  const parsed = parseUrl(value);
+  return Boolean(parsed && ["localhost", "127.0.0.1"].includes(parsed.hostname));
+}
+
+function configureMediaPermissions(electronSession) {
+  electronSession.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+    if (permission !== "media") {
+      return false;
+    }
+
+    const origin =
+      details?.securityOrigin ||
+      details?.requestingUrl ||
+      requestingOrigin ||
+      webContents?.getURL?.() ||
+      "";
+    const allowed = isTrustedRendererOrigin(origin);
+
+    console.info("[EyeGuard desktop] media permission check", {
+      allowed,
+      permission,
+      origin,
+      mediaType: details?.mediaType ?? "unknown"
+    });
+
+    return allowed;
+  });
+
+  electronSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
+    if (permission !== "media") {
+      callback(false);
+      return;
+    }
+
+    const origin = details?.requestingUrl || details?.securityOrigin || webContents.getURL();
+    const mediaTypes = Array.isArray(details?.mediaTypes)
+      ? details.mediaTypes
+      : details?.mediaType
+        ? [details.mediaType]
+        : ["unknown"];
+    const allowed =
+      isTrustedRendererOrigin(origin) &&
+      mediaTypes.every((mediaType) => ["video", "audio", "unknown"].includes(mediaType));
+
+    console.info("[EyeGuard desktop] media permission request", {
+      allowed,
+      permission,
+      origin,
+      mediaTypes
+    });
+
+    callback(allowed);
+  });
+}
+
+function preferencesPath() {
+  return path.join(app.getPath("userData"), "preferences.json");
+}
+
+function readPreferences() {
+  try {
+    return JSON.parse(fs.readFileSync(preferencesPath(), "utf-8"));
+  } catch {
+    return { launchOnStartup: false };
+  }
+}
+
+function writePreferences(preferences) {
+  fs.writeFileSync(preferencesPath(), JSON.stringify(preferences, null, 2));
+}
+
+function resolveFrontendEntry() {
+  if (isDev) {
+    return process.env.EYEGUARD_FRONTEND_URL;
+  }
+  return path.join(__dirname, "..", "..", "frontend", "dist", "index.html");
+}
+
+function startVisionService() {
+  if (visionProcess) {
+    return;
+  }
+
+  const pythonCommand = process.env.EYEGUARD_VISION_PYTHON || "python";
+  const visionAppDir = path.join(__dirname, "..", "..", "..", "services", "vision", "app");
+  if (!fs.existsSync(visionAppDir)) {
+    console.warn("[EyeGuard desktop] vision service directory not found:", visionAppDir);
+    return;
+  }
+
+  visionProcess = spawn(
+    pythonCommand,
+    ["-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", String(visionPort)],
+    {
+      cwd: visionAppDir,
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"]
+    }
+  );
+
+  visionProcess.stdout?.on("data", (chunk) => {
+    process.stdout.write(`[vision] ${chunk}`);
+  });
+
+  visionProcess.stderr?.on("data", (chunk) => {
+    process.stderr.write(`[vision] ${chunk}`);
+  });
+
+  visionProcess.on("exit", (code) => {
+    console.warn("[EyeGuard desktop] vision service exited", code);
+    visionProcess = null;
+  });
+}
+
+function stopVisionService() {
+  if (!visionProcess) {
+    return;
+  }
+  visionProcess.kill();
+  visionProcess = null;
+}
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1520,
+    height: 940,
+    minWidth: 1200,
+    minHeight: 760,
+    backgroundColor: "#071018",
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      backgroundThrottling: false
+    }
+  });
+  win.setTitle("EyeGuard");
+  configureMediaPermissions(win.webContents.session);
+
+  const frontendEntry = resolveFrontendEntry();
+  if (isDev) {
+    let retriedWithLocalhost = false;
+    win.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+      if (errorCode === -3 || String(validatedURL).startsWith("data:text/html")) {
+        return;
+      }
+
+      if (
+        !retriedWithLocalhost &&
+        typeof validatedURL === "string" &&
+        validatedURL.includes("127.0.0.1")
+      ) {
+        retriedWithLocalhost = true;
+        const localhostUrl = validatedURL.replace("127.0.0.1", "localhost");
+        console.warn("[EyeGuard desktop] retrying renderer load with localhost", {
+          from: validatedURL,
+          to: localhostUrl
+        });
+        void win.loadURL(localhostUrl).catch((error) => {
+          console.error("[EyeGuard desktop] localhost retry failed", error);
+        });
+        return;
+      }
+
+      console.error("[EyeGuard desktop] renderer failed to load", {
+        errorCode,
+        errorDescription,
+        validatedURL
+      });
+      void win.loadURL(
+        `data:text/html,${encodeURIComponent(`
+          <html>
+            <body style="margin:0;background:#071018;color:#f7f5ef;font-family:Aptos,Segoe UI,sans-serif;display:grid;place-items:center;min-height:100vh;">
+              <div style="max-width:720px;padding:32px 36px;border-radius:24px;background:rgba(17,25,32,.92);border:1px solid rgba(247,245,239,.1);box-shadow:0 24px 70px rgba(3,8,12,.28);">
+                <p style="margin:0 0 12px;text-transform:uppercase;letter-spacing:.18em;font-size:.78rem;color:#aeb5ad;">EyeGuard desktop</p>
+                <h1 style="margin:0 0 16px;font-size:2rem;">The frontend did not load.</h1>
+                <p style="margin:0 0 12px;color:#d7ddd6;">Electron opened, but it could not reach the Vite dev server.</p>
+                <p style="margin:0 0 18px;color:#aeb5ad;"><strong>URL:</strong> ${validatedURL || frontendEntry}</p>
+                <p style="margin:0 0 18px;color:#aeb5ad;"><strong>Error:</strong> ${errorDescription} (${errorCode})</p>
+                <pre style="white-space:pre-wrap;background:rgba(6,10,14,.52);padding:16px;border-radius:16px;border:1px solid rgba(247,245,239,.08);color:#f7f5ef;">npm.cmd --workspace apps/frontend run dev</pre>
+                <p style="margin:16px 0 0;color:#aeb5ad;">Keep the frontend server running, then restart Electron.</p>
+              </div>
+            </body>
+          </html>
+        `)}`
+      );
+    });
+    void win.loadURL(frontendEntry).catch((error) => {
+      console.error("[EyeGuard desktop] loadURL threw", error);
+    });
+    win.webContents.openDevTools({ mode: "detach" });
+  } else {
+    void win.loadFile(frontendEntry);
+  }
+}
+
+app.whenReady().then(() => {
+  const preferences = readPreferences();
+  app.setLoginItemSettings({ openAtLogin: Boolean(preferences.launchOnStartup) });
+  startVisionService();
+  createWindow();
+
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+
+ipcMain.handle("launch-on-startup:set", (_event, enabled) => {
+  app.setLoginItemSettings({ openAtLogin: Boolean(enabled) });
+  writePreferences({ launchOnStartup: Boolean(enabled) });
+  return app.getLoginItemSettings().openAtLogin;
+});
+
+ipcMain.handle("vision-service:url", () => `http://127.0.0.1:${visionPort}`);
+
+app.on("window-all-closed", () => {
+  stopVisionService();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+app.on("before-quit", () => {
+  stopVisionService();
+});

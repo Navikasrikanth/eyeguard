@@ -1,0 +1,14 @@
+{
+  "name": "eyeguard-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "main": "./src/main.cjs",
+  "scripts": {
+    "dev": "node ./src/dev.cjs",
+    "build": "node -e \"console.log('Package the Electron app after building frontend assets.')\"",
+    "start": "electron ./src/main.cjs"
+  },
+  "dependencies": {
+    "electron": "^37.2.0"
+  }
+}
