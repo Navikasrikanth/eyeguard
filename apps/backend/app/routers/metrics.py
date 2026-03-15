@@ -13,12 +13,12 @@ from ..services.repository import ensure_daily_metrics
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 logger = logging.getLogger("eyeguard.metrics")
 
-#tracking all user metrics and storing in db for analysis
+
 def _day_from_iso(value: str) -> str:
     return datetime.fromisoformat(value.replace("Z", "+00:00")).date().isoformat()
 
 
-def _increment_daily_metric(#
+def _increment_daily_metric(
     db: sqlite3.Connection,
     *,
     user_id: int,
@@ -30,7 +30,7 @@ def _increment_daily_metric(#
     blinks: int = 0,
 ) -> None:
     ensure_daily_metrics(db, user_id=user_id, metric_date=metric_date)
-    db.execute(#using session ticks for screen usage 
+    db.execute(
         """
         UPDATE daily_metrics
         SET total_screen_time_seconds = total_screen_time_seconds + ?,
@@ -41,7 +41,7 @@ def _increment_daily_metric(#
         WHERE user_id = ? AND metric_date = ?
         """,
         (screen_time, breaks, alerts, posture_alerts, blinks, user_id, metric_date),
-    )#use blink buckets for tracking blinks in intervals for analysis 
+    )
 
 
 @router.post("/session-tick", status_code=status.HTTP_202_ACCEPTED)
@@ -116,7 +116,7 @@ def record_posture_event(
     return {"ok": True}
 
 
-@router.post("/reminder", status_code=status.HTTP_202_ACCEPTED)#reminder for 20-20-20 rule breaks
+@router.post("/reminder", status_code=status.HTTP_202_ACCEPTED)
 def record_reminder(
     payload: ReminderEventRequest,
     user_id: int = Depends(get_current_user_id),

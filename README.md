@@ -13,7 +13,8 @@ EyeGuard is a wellness support product. It does **not** diagnose eye disease, mu
 - `apps/backend`: FastAPI backend with auth, settings, analytics persistence, and user-scoped data access.
 - `packages/types`: Shared TypeScript contracts used by the client and desktop shell.
 - `packages/ui`: Shared UI tokens and helper components.
-- `docs`: Architecture, privacy notes, demo script, and acceptance mapping.
+- `docs`: Architecture, privacy notes, tech stack notes, demo script, and acceptance mapping.
+- `feature_list.md`: Exhaustive feature inventory for the current MVP.
 
 ## Quick start
 

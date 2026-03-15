@@ -27,7 +27,7 @@ def on_startup() -> None:
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
-# Create all API routes
+
 app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(users.router, prefix=settings.api_prefix)
 app.include_router(metrics.router, prefix=settings.api_prefix)

@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-#rules for req res models for for authentication and stuff
+
 class SignupRequest(BaseModel):
     email: str
     username: str = Field(min_length=2, max_length=32)
@@ -46,11 +46,12 @@ class UserProfileResponse(BaseModel):
 
 class SettingsResponse(BaseModel):
     language: Literal["en", "hi"] = "en"
-    reminder_interval_minutes: int = Field(default=20, ge=5, le=60)
+    reminder_interval_minutes: int = Field(default=20, ge=1, le=60)
     notifications_enabled: bool = True
     camera_enabled: bool = True
     posture_sensitivity: float = Field(default=0.62, ge=0.3, le=0.95)
     launch_on_startup: bool = False
+    force_break_enabled: bool = False
 
 
 class AuthTokensResponse(BaseModel):
@@ -80,11 +81,12 @@ class PasswordChangeRequest(BaseModel):
 
 class SettingsUpdateRequest(BaseModel):
     language: Literal["en", "hi"] | None = None
-    reminder_interval_minutes: int | None = Field(default=None, ge=5, le=60)
+    reminder_interval_minutes: int | None = Field(default=None, ge=1, le=60)
     notifications_enabled: bool | None = None
     camera_enabled: bool | None = None
     posture_sensitivity: float | None = Field(default=None, ge=0.3, le=0.95)
     launch_on_startup: bool | None = None
+    force_break_enabled: bool | None = None
 
 
 class SessionTickRequest(BaseModel):

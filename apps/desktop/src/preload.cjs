@@ -6,5 +6,14 @@ contextBridge.exposeInMainWorld("electronBridge", {
   },
   getVisionServiceUrl() {
     return ipcRenderer.invoke("vision-service:url");
+  },
+  showNotification(payload) {
+    return ipcRenderer.invoke("notification:show", payload);
+  },
+  presentForceBreak() {
+    return ipcRenderer.invoke("force-break:present");
+  },
+  releaseForceBreak() {
+    return ipcRenderer.invoke("force-break:release");
   }
 });

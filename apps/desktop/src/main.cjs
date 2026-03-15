@@ -1,11 +1,13 @@
 const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, Notification } = require("electron");
 
 const isDev = Boolean(process.env.EYEGUARD_FRONTEND_URL);
 const visionPort = process.env.EYEGUARD_VISION_PORT || "8765";
 let visionProcess = null;
+let mainWindow = null;
+let forceBreakPinned = false;
 
 function parseUrl(value) {
   try {
@@ -144,6 +146,27 @@ function stopVisionService() {
   visionProcess = null;
 }
 
+function focusMainWindow() {
+  const win = mainWindow;
+  if (!win || win.isDestroyed()) {
+    return false;
+  }
+
+  if (win.isMinimized()) {
+    win.restore();
+  }
+  try {
+    app.focus({ steal: true });
+  } catch {
+    app.focus();
+  }
+  win.show();
+  win.moveTop();
+  win.webContents.focus();
+  win.focus();
+  return true;
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1520,
@@ -161,6 +184,13 @@ function createWindow() {
   });
   win.setTitle("EyeGuard");
   configureMediaPermissions(win.webContents.session);
+  mainWindow = win;
+  win.on("closed", () => {
+    if (mainWindow === win) {
+      mainWindow = null;
+      forceBreakPinned = false;
+    }
+  });
 
   const frontendEntry = resolveFrontendEntry();
   if (isDev) {
@@ -239,6 +269,59 @@ ipcMain.handle("launch-on-startup:set", (_event, enabled) => {
 });
 
 ipcMain.handle("vision-service:url", () => `http://127.0.0.1:${visionPort}`);
+
+ipcMain.handle("notification:show", (_event, payload) => {
+  if (!Notification.isSupported()) {
+    console.warn("[EyeGuard desktop] notifications are not supported on this system");
+    return false;
+  }
+
+  const title = typeof payload?.title === "string" && payload.title.trim() ? payload.title.trim() : "EyeGuard";
+  const body = typeof payload?.body === "string" ? payload.body.trim() : "";
+  const focusOnClick = Boolean(payload?.focusOnClick);
+  const notification = new Notification({
+    title,
+    body,
+    silent: false
+  });
+
+  notification.on("click", () => {
+    if (focusOnClick) {
+      focusMainWindow();
+    }
+  });
+
+  notification.show();
+  console.info("[EyeGuard desktop] notification shown", { title, focusOnClick });
+  return true;
+});
+
+ipcMain.handle("force-break:present", () => {
+  const win = mainWindow;
+  if (!win || win.isDestroyed()) {
+    return false;
+  }
+
+  forceBreakPinned = true;
+  focusMainWindow();
+  win.setAlwaysOnTop(true, "screen-saver");
+  win.flashFrame(true);
+  console.info("[EyeGuard desktop] force break presented");
+  return true;
+});
+
+ipcMain.handle("force-break:release", () => {
+  const win = mainWindow;
+  forceBreakPinned = false;
+  if (!win || win.isDestroyed()) {
+    return false;
+  }
+
+  win.flashFrame(false);
+  win.setAlwaysOnTop(false);
+  console.info("[EyeGuard desktop] force break released");
+  return true;
+});
 
 app.on("window-all-closed", () => {
   stopVisionService();

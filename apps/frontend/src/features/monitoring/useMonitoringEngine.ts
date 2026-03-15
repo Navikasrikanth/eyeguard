@@ -2,7 +2,6 @@ import type { FaceLandmarker, PoseLandmarker } from "@mediapipe/tasks-vision";
 import type { PostureDetails, PostureMetrics } from "@eyeguard/types";
 import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
-import { calculateFatigueRisk } from "./fatigue";
 
 import {
   assessPosture,
@@ -26,7 +25,6 @@ type MonitoringState = {
   cameraState: "pending" | "ready" | "denied" | "unsupported" | "error";
   postureState: "good" | "warning" | "unknown";
   blinkCount: number;
-  fatigueRisk: "LOW" | "MEDIUM" | "HIGH";
   postureAlertVisible: boolean;
   postureReasons: string[];
   postureMetrics: PostureMetrics | null;
@@ -133,7 +131,6 @@ export function useMonitoringEngine({
   const [cameraState, setCameraState] = useState<MonitoringState["cameraState"]>("pending");
   const [postureState, setPostureState] = useState<MonitoringState["postureState"]>("unknown");
   const [blinkCount, setBlinkCount] = useState(0);
-  const [fatigueRisk, setFatigueRisk] = useState<"LOW" | "MEDIUM" | "HIGH">("LOW");
   const [postureReasons, setPostureReasons] = useState<string[]>([]);
   const [postureMetrics, setPostureMetrics] = useState<PostureMetrics | null>(null);
   const [calibrationState, setCalibrationState] = useState<MonitoringState["calibrationState"]>("needed");
@@ -426,15 +423,7 @@ export function useMonitoringEngine({
 
           animationFrameRef.current = window.requestAnimationFrame(loop);
         };
-        const screenMinutes = performance.now() / 60000;
 
-        const risk = calculateFatigueRisk(
-        blinkCount,
-        postureStateRef.current,
-        screenMinutes
-        );
-
-        setFatigueRisk(risk);
         animationFrameRef.current = window.requestAnimationFrame(loop);
       } catch (error) {
         const denied = error instanceof DOMException && error.name === "NotAllowedError";
@@ -466,7 +455,6 @@ export function useMonitoringEngine({
     cameraState,
     postureState,
     blinkCount,
-    fatigueRisk,
     postureAlertVisible: postureState === "warning",
     postureReasons,
     postureMetrics,

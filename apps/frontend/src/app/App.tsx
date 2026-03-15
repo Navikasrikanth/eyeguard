@@ -22,6 +22,7 @@ function ProtectedRoutes() {
     <>
       <ReminderModal
         open={monitoring.reminderOpen}
+        forceBreakEnabled={monitoring.forceBreakEnabled}
         onDismiss={() => monitoring.dismissReminder(120)}
         onStart={() => monitoring.beginBreak("auto")}
       />

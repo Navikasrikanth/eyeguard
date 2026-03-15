@@ -98,7 +98,14 @@ def update_my_settings(
 
     settings_updates = []
     values: list[object] = []
-    for field in ("reminder_interval_minutes", "notifications_enabled", "camera_enabled", "posture_sensitivity", "launch_on_startup"):
+    for field in (
+        "reminder_interval_minutes",
+        "notifications_enabled",
+        "camera_enabled",
+        "posture_sensitivity",
+        "launch_on_startup",
+        "force_break_enabled",
+    ):
         if field in data:
             value = data[field]
             if isinstance(value, bool):

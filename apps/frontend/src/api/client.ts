@@ -39,6 +39,7 @@ type RawAuthResponse = {
     camera_enabled: boolean;
     posture_sensitivity: number;
     launch_on_startup: boolean;
+    force_break_enabled: boolean;
   };
 };
 
@@ -67,7 +68,8 @@ function normalizeSettings(settings: RawAuthResponse["settings"]): UserSettings 
     notificationsEnabled: settings.notifications_enabled,
     cameraEnabled: settings.camera_enabled,
     postureSensitivity: settings.posture_sensitivity,
-    launchOnStartup: settings.launch_on_startup
+    launchOnStartup: settings.launch_on_startup,
+    forceBreakEnabled: settings.force_break_enabled
   };
 }
 
@@ -326,7 +328,8 @@ export const apiClient = {
         notifications_enabled: payload.notificationsEnabled,
         camera_enabled: payload.cameraEnabled,
         posture_sensitivity: payload.postureSensitivity,
-        launch_on_startup: payload.launchOnStartup
+        launch_on_startup: payload.launchOnStartup,
+        force_break_enabled: payload.forceBreakEnabled
       })
     });
     if (!response.ok) {

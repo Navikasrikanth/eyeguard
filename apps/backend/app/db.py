@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS settings (
     camera_enabled INTEGER NOT NULL DEFAULT 1,
     posture_sensitivity REAL NOT NULL DEFAULT 0.62,
     launch_on_startup INTEGER NOT NULL DEFAULT 0,
+    force_break_enabled INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -121,6 +122,9 @@ CREATE TABLE IF NOT EXISTS blink_buckets (
 def init_db() -> None:
     with get_db() as db:
         db.executescript(SCHEMA)
+        settings_columns = {row["name"] for row in db.execute("PRAGMA table_info(settings)").fetchall()}
+        if "force_break_enabled" not in settings_columns:
+            db.execute("ALTER TABLE settings ADD COLUMN force_break_enabled INTEGER NOT NULL DEFAULT 0")
         columns = {row["name"] for row in db.execute("PRAGMA table_info(posture_events)").fetchall()}
         if "details_json" not in columns:
             db.execute("ALTER TABLE posture_events ADD COLUMN details_json TEXT")

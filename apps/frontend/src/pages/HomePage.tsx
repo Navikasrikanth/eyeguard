@@ -8,6 +8,7 @@ import { CameraPanel } from "@/components/monitoring/CameraPanel";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useMonitoring } from "@/features/monitoring/MonitoringContext";
 import { useMonitoringEngine } from "@/features/monitoring/useMonitoringEngine";
+import { showWellnessNotification } from "@/utils/notifications";
 
 function formatDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
@@ -64,7 +65,6 @@ export function HomePage() {
   const [coachReview, setCoachReview] = useState<PostureCoachReview | null>(null);
   const [coachLoading, setCoachLoading] = useState(false);
   const [coachError, setCoachError] = useState<string | null>(null);
-  const [blueLightEnabled, setBlueLightEnabled] = useState(false);
   const monitoring = useMonitoringEngine({
     enabled: Boolean(settings?.cameraEnabled) && !backgroundVisionActive,
     postureSensitivity: settings?.postureSensitivity ?? 0.62,
@@ -72,13 +72,6 @@ export function HomePage() {
     onPostureAlert: (details) => recordPostureAlert(t("postureAlert"), details),
     pausedForBackground: backgroundVisionActive
   });
-  const { fatigueRisk } = monitoring;
-
-  useEffect(() => {
-    if (fatigueRisk === "HIGH") {
-      setBlueLightEnabled(true);
-    }
-  }, [fatigueRisk]);
 
   useEffect(() => {
     let mounted = true;
@@ -124,6 +117,14 @@ export function HomePage() {
         }
       });
       setCoachReview(review);
+      if (settings?.notificationsEnabled) {
+        void showWellnessNotification({
+          title: "AI coach review ready",
+          body: `Result: ${formatCoachLabel(review.postureLabel)}. ${review.coaching}`,
+          tag: "eyeguard-ai-coach-review",
+          focusOnClick: true
+        });
+      }
     } catch (error) {
       setCoachError(error instanceof Error ? error.message : "Unable to review posture with AI.");
     } finally {
@@ -156,18 +157,6 @@ export function HomePage() {
       label: "Next reminder",
       value: formatDuration(nextBreakInSeconds),
       detail: `Interval: ${settings?.reminderIntervalMinutes ?? 20} minutes`
-    },
-    {
-      label: "Fatigue risk",
-      value: fatigueRisk === "HIGH" ? "🔴 HIGH" :
-       fatigueRisk === "MEDIUM" ? "🟡 MEDIUM" :
-       "🟢 LOW",
-      detail:
-        fatigueRisk === "LOW"
-          ? "Healthy screen usage."
-          : fatigueRisk === "MEDIUM"
-          ? "Consider taking a short break."
-          : "High fatigue detected. Consider enabling blue light protection."
     }
   ];
 
@@ -347,7 +336,6 @@ export function HomePage() {
           </div>
         ) : null}
       </section>
-      {blueLightEnabled && <div className="blue-light-overlay"></div>}
     </div>
   );
 }

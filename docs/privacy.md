@@ -8,6 +8,7 @@ EyeGuard provides wellness reminders and habit analytics only. It is not a medic
 
 - Raw webcam frames stay on the device and are never stored.
 - The backend stores only derived event data such as blink counts, posture alerts, break timestamps, and daily totals.
+- Optional AI coach snapshots are sent only when the user explicitly requests a review and are not stored by EyeGuard.
 - Settings are limited to product behavior preferences needed for the experience.
 
 ## User isolation

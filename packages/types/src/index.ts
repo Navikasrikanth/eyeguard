@@ -24,6 +24,7 @@ export interface UserSettings {
   cameraEnabled: boolean;
   postureSensitivity: number;
   launchOnStartup: boolean;
+  forceBreakEnabled: boolean;
 }
 
 export interface AuthResponse {
