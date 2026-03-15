@@ -251,32 +251,11 @@ a {
 .alert-banner {
   background: rgba(255, 95, 93, 0.15);
   border: 1px solid rgba(255, 95, 93, 0.28);
-  height: 90px;
-  padding: 14px 16px;
-  border-radius: 18px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  overflow-y: auto;
 }
-.alert-banner span {
-  line-height: 1.4;
-  word-break: break-word;
-}
+
 .support-banner {
   background: rgba(139, 168, 136, 0.16);
   border: 1px solid rgba(139, 168, 136, 0.3);
-  height: 90px;
-  padding: 14px 16px;
-  border-radius: 18px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  overflow-y: auto;
 }
 
 .app-shell {
@@ -453,10 +432,10 @@ a {
 }
 
 .camera-panel,
-.status-card-grid {
+.status-card-grid,
+.chart-card {
   display: grid;
   gap: 18px;
-  grid-template-rows: auto auto 90px;
 }
 
 .card-head {
@@ -663,16 +642,4 @@ a {
     flex-direction: column;
     align-items: stretch;
   }
-}
-
-.blue-light-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 170, 80, 0.15);
-  pointer-events: none;
-  z-index: 9999;
-  backdrop-filter: sepia(0.3) saturate(0.8);
 }

@@ -160,6 +160,27 @@ def test_break_and_posture_events_persist(tmp_path: Path) -> None:
     assert payload["posture_events"][0]["details"]["metrics"]["shoulder_neck_delta"] == 0.09
 
 
+def test_force_break_setting_persists(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    signup = client.post(
+        "/api/auth/signup",
+        json={"email": "settings@example.com", "username": "settings", "password": "Secret123"},
+    )
+    token = signup.json()["tokens"]["access_token"]
+
+    initial_settings = signup.json()["settings"]
+    assert initial_settings["force_break_enabled"] is False
+
+    update = client.patch(
+        "/api/settings/me",
+        headers=auth_headers(token),
+        json={"force_break_enabled": True},
+    )
+
+    assert update.status_code == 200, update.text
+    assert update.json()["force_break_enabled"] is True
+
+
 def test_legacy_posture_metrics_are_backfilled_for_dashboard(tmp_path: Path) -> None:
     client = make_client(tmp_path)
     signup = client.post(

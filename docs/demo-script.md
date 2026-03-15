@@ -7,9 +7,11 @@
 3. Enable the camera and point out live blink count, posture status, and the reminder ring.
 4. Slouch or tilt to trigger the red `correct your posture` alert.
 5. Click `Take a Break`, walk through the 20-second guided exercise flow, and auto-return to monitoring.
-6. Open Analytics to show screen time, blink totals, posture alerts, and break history.
-7. Open Settings to change language, reminder interval, and notification/camera preferences.
-8. Log out and explain that data stays scoped to the authenticated account.
+6. Open Settings to show the reminder interval, force-break option, and desktop-first preferences.
+7. Switch away from the app in Electron and explain the background-monitoring handoff.
+8. Use `Review posture with AI` to show the optional second-opinion path.
+9. Open Analytics to show screen time, blink totals, posture alerts, and break history.
+10. Log out and explain that data stays scoped to the authenticated account.
 
 ## Fallback demo
 

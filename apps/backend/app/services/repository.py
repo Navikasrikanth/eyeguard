@@ -28,10 +28,11 @@ def row_to_settings(row: sqlite3.Row) -> SettingsResponse:
         camera_enabled=bool(row["camera_enabled"]),
         posture_sensitivity=float(row["posture_sensitivity"]),
         launch_on_startup=bool(row["launch_on_startup"]),
+        force_break_enabled=bool(row["force_break_enabled"]),
     )
 
 
-def get_user_by_email(db: sqlite3.Connection, email: str) -> sqlite3.Row | None:#
+def get_user_by_email(db: sqlite3.Connection, email: str) -> sqlite3.Row | None:
     return db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
 
 
@@ -47,7 +48,8 @@ def get_settings(db: sqlite3.Connection, user_id: int) -> sqlite3.Row:
                settings.notifications_enabled,
                settings.camera_enabled,
                settings.posture_sensitivity,
-               settings.launch_on_startup
+               settings.launch_on_startup,
+               settings.force_break_enabled
         FROM settings
         JOIN users ON users.id = settings.user_id
         WHERE settings.user_id = ?
@@ -83,14 +85,15 @@ def create_user(
             notifications_enabled,
             camera_enabled,
             posture_sensitivity,
-            launch_on_startup
-        ) VALUES (?, 20, 1, 1, 0.62, 0)
+            launch_on_startup,
+            force_break_enabled
+        ) VALUES (?, 20, 1, 1, 0.62, 0, 0)
         """,
         (user_id,),
     )
     return user_id
 
-#stores the login session
+
 def store_refresh_token(db: sqlite3.Connection, *, user_id: int, token: str, expires_at: str, created_at: str) -> None:
     db.execute(
         """
@@ -99,7 +102,7 @@ def store_refresh_token(db: sqlite3.Connection, *, user_id: int, token: str, exp
         """,
         (user_id, sha256(token), expires_at, created_at),
     )
-#refresh token to hold connection to every session
+
 
 def is_refresh_token_valid(db: sqlite3.Connection, *, user_id: int, token: str) -> bool:
     now_iso = datetime.now(UTC).isoformat()
@@ -117,7 +120,7 @@ def is_refresh_token_valid(db: sqlite3.Connection, *, user_id: int, token: str) 
     return row is not None
 
 
-def revoke_refresh_token(db: sqlite3.Connection, *, token: str) -> None:#revoke token on log out
+def revoke_refresh_token(db: sqlite3.Connection, *, token: str) -> None:
     db.execute(
         """
         UPDATE refresh_tokens

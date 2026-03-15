@@ -1,45 +1,24 @@
-# Node
 node_modules/
 dist/
 build/
 .vite/
-.tsbuildinfo
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.sqlite3
-
-# Python virtual environments
-.venv/
-venv/
-
-# Backend cache / test files
+.DS_Store
+Thumbs.db
+apps/backend/data/*.sqlite3
+apps/backend/data/*.db
+apps/backend/data/*.sqlite
 apps/backend/.vendor/
 apps/backend/.pytest_cache/
 apps/backend/__pycache__/
 apps/backend/app/__pycache__/
 apps/backend/app/tests/__pycache__/
-
-# Database files
-apps/backend/data/*.sqlite
-apps/backend/data/*.sqlite3
-apps/backend/data/*.db
-
-# Environment variables
+.venv/
+coverage/
+*.pyc
+*.pyo
+*.pyd
+.tsbuildinfo
 .env
 .env.local
-
-# Coverage / testing
-coverage/
 playwright-report/
 test-results/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# VSCode
-.vscode/

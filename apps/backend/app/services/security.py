@@ -18,7 +18,7 @@ def iso_now() -> str:
     return utc_now().isoformat()
 
 
-def hash_password(password: str) -> str:#hash password for privacy
+def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 

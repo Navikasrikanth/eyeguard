@@ -2,11 +2,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 type ReminderModalProps = {
   open: boolean;
+  forceBreakEnabled: boolean;
   onStart: () => void;
   onDismiss: () => void;
 };
 
-export function ReminderModal({ open, onStart, onDismiss }: ReminderModalProps) {
+export function ReminderModal({ open, forceBreakEnabled, onStart, onDismiss }: ReminderModalProps) {
   return (
     <AnimatePresence>
       {open ? (
@@ -23,17 +24,20 @@ export function ReminderModal({ open, onStart, onDismiss }: ReminderModalProps) 
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
           >
             <p className="eyebrow">20-20-20 reminder</p>
-            <h3>Give your eyes a 20-second reset</h3>
+            <h3>{forceBreakEnabled ? "Break required now" : "Give your eyes a 20-second reset"}</h3>
             <p>
-              Look 20 feet away, relax your shoulders, and let EyeGuard guide a short wellness break. This is a
-              reminder, not a medical diagnosis.
+              {forceBreakEnabled
+                ? "Force break is enabled, so EyeGuard is about to start the 20-second recovery screen. This is a wellness cue, not a medical diagnosis."
+                : "Look 20 feet away, relax your shoulders, and let EyeGuard guide a short wellness break. This is a reminder, not a medical diagnosis."}
             </p>
             <div className="button-row">
-              <button className="ghost-button" onClick={onDismiss} type="button">
-                Snooze 2 min
-              </button>
+              {forceBreakEnabled ? null : (
+                <button className="ghost-button" onClick={onDismiss} type="button">
+                  Snooze 2 min
+                </button>
+              )}
               <button className="primary-button" onClick={onStart} type="button">
-                Start break
+                {forceBreakEnabled ? "Begin now" : "Start break"}
               </button>
             </div>
           </motion.div>

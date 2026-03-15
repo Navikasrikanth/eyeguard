@@ -81,6 +81,7 @@
 - Blink events persisted in minute buckets.
 - Posture alerts persisted with timestamps, severity, reasons, and metric details.
 - Posture alert persistence throttling to reduce noisy duplicates.
+- Optional forced-break mode that auto-starts the break when the reminder timer expires.
 - Console logging in the browser for camera and posture diagnostics.
 - Backend terminal logging for posture alerts with the exact reasons and metric deltas.
 
@@ -90,6 +91,14 @@
 - Default 20-minute reminder cadence.
 - Manual `Take a Break` button on the Home page.
 - Reminder modal with `Start break` and `Snooze 2 min`.
+- Native reminder notifications in Electron when notifications are enabled.
+- Browser reminder notifications when notifications are enabled and browser permission is granted.
+- 30-second pre-break notifications before the reminder is due.
+- Poor-posture streak notifications after 2 minutes of continuous warning state.
+- Low-blink reminder notifications after an extended blink drought.
+- Session summary notifications that point the user toward the analytics dashboard.
+- AI coach completion notifications after a review finishes.
+- Force-break path that skips snooze and jumps straight into the break countdown.
 - Reminder events persisted to analytics.
 - Dedicated break screen.
 - 20-second countdown timer for the break flow.
@@ -125,10 +134,13 @@
 
 - Language selector.
 - Reminder interval slider.
+- Reminder interval slider with a 1-to-60 minute range.
 - Notifications toggle.
 - Camera monitoring toggle.
 - Posture sensitivity setting persisted per user.
 - Launch-on-startup toggle routed through Electron IPC.
+- Force-break toggle persisted per user.
+- Saved/failed feedback banner for settings changes.
 - Profile save status feedback.
 - Password change status feedback.
 - Startup preference save feedback.
@@ -139,8 +151,10 @@
 - Desktop-first window sizing and minimum dimensions.
 - Secure preload bridge with context isolation.
 - IPC method for launch-on-startup preference.
+- IPC methods to present and release a forced break window.
 - Open-at-login integration through Electron.
 - Dev mode support via a frontend URL environment variable.
+- Electron force-break presentation that restores the app window, brings it to the front, and pins it on top during the timed break.
 
 ## API And Backend Foundations
 
