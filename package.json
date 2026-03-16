@@ -1,0 +1,19 @@
+{
+  "name": "eyeguard-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/frontend",
+    "apps/desktop",
+    "packages/types",
+    "packages/ui"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --workspace apps/frontend run dev",
+    "build:frontend": "npm --workspace apps/frontend run build",
+    "dev:desktop": "npm --workspace apps/desktop run dev",
+    "build:desktop": "npm --workspace apps/desktop run build",
+    "check:frontend": "npm --workspace apps/frontend run check",
+    "test:frontend": "npm --workspace apps/frontend run test"
+  }
+}

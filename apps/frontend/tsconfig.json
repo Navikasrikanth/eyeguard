@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["vite/client", "vitest/globals"],
+    "moduleResolution": "Bundler",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@eyeguard/types": ["../../../packages/types/src"],
+      "@eyeguard/ui": ["../../../packages/ui/src"]
+    }
+  },
+  "include": ["src", "vite.config.ts", "../../packages/types/src/**/*.ts", "../../packages/ui/src/**/*.ts"]
+}
